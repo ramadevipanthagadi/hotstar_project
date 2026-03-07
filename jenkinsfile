@@ -5,6 +5,12 @@ pipeline {
         maven 'mymave'
     }
 
+    environment {
+        DOCKER_USER = 'sunithriyansh'
+        DOCKER_PASS = 'Sunitha@565'
+        IMAGE_NAME  = 'satya'
+    }
+
     stages {
 
         stage('Checkout') {
@@ -34,17 +40,9 @@ pipeline {
 
         stage('Push to DockerHub') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub',
-                    usernameVariable: 'sunithriyansh',
-                    passwordVariable: 'satya'
-                )]) {
-
-                    sh 'docker login -u sunithriyansh -p 'Sunitha@565'
-                    sh 'docker tag imag1:latest sunithriyansh/satya:latest'
-                    sh 'docker push sunithriyansh/satya:latest'
-
-                }
+                sh 'docker login -u sunithriyansh -p satya'
+                sh 'docker tag imag1:latest sunithriyansh/satya:latest'
+                sh 'docker push sunithriyansh/satya:latest'
             }
         }
 
