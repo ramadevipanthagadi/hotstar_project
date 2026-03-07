@@ -1,44 +1,52 @@
 pipeline {
     agent any
-     tools{
-maven'mymave'
-}
+
+    tools {
+        maven 'mymave'
+    }
+
     stages {
-        stage('checkout') {
+
+        stage('Checkout') {
             steps {
-                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/lakshmansrikanth123/hotstar_project.git']])
+                git branch: 'master', url: 'https://github.com/ramadevipanthagadi/hotstar_project.git'
             }
         }
-		stage('clean package'){
-		steps{
-		   sh'mvn clean package'
-		}
-		}
-		stage('docker_build'){
-		
-		steps{
-		     sh 'docker build -t imag1 .'
-		}
-		}
-		stage('docker_run'){
-		
-		steps{
-		    sh 'docker rm cont1 -f || true'   
-           sh 'docker run -itd --name cont1 -p 8085:8080 imag1'
-		}
-		}
-    }
-        stage('Push to DockerHub') {
-        steps {
-            withCredentials([usernamePassword(
-            credentialsId: 'dockerhub',
-            usernameVariable: 'sunithriyansh',
-             passwordVariable: 'Sunitha@565' )])
-    
 
-       sh 'docker login -u $USER -p $PASS'
-       sh 'docker tag img1:latest sunithriyansh/satya'
-       sh 'docker push sunithriyansh/satya'
-     
-   }
+        stage('Build with Maven') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t imag1 .'
+            }
+        }
+
+        stage('Docker Run') {
+            steps {
+                sh 'docker rm -f cont1 || true'
+                sh 'docker run -d --name cont1 -p 8085:8080 imag1'
+            }
+        }
+
+        stage('Push to DockerHub') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+
+                    sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
+                    sh 'docker tag imag1:latest $DOCKER_USER/satya:latest'
+                    sh 'docker push $DOCKER_USER/satya:latest'
+
+                }
+            }
+        }
+
+    }
 }
