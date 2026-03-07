@@ -34,11 +34,11 @@ maven'mymave'
             credentialsId: 'dockerhub',
             usernameVariable: 'sunithriyansh',
              passwordVariable: 'Sunitha@565' )])
-    {
+    
 
        sh 'docker login -u $USER -p $PASS'
        sh 'docker tag img1:latest sunithriyansh/satya'
        sh 'docker push sunithriyansh/satya'
-     }
+     
    }
 }
