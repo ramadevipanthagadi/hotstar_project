@@ -36,13 +36,13 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
+                    usernameVariable: 'sunithriyansh',
+                    passwordVariable: 'satya'
                 )]) {
 
                     sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
-                    sh 'docker tag imag1:latest $DOCKER_USER/satya:latest'
-                    sh 'docker push $DOCKER_USER/satya:latest'
+                    sh 'docker tag imag1:latest sunithriyansh/satya:latest'
+                    sh 'docker push sunithriyansh/satya:latest'
 
                 }
             }
