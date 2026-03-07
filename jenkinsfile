@@ -40,7 +40,7 @@ pipeline {
                     passwordVariable: 'satya'
                 )]) {
 
-                    sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
+                    sh 'docker login -u sunithriyansh -p 'Sunitha@565'
                     sh 'docker tag imag1:latest sunithriyansh/satya:latest'
                     sh 'docker push sunithriyansh/satya:latest'
 
