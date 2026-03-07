@@ -37,8 +37,8 @@ maven'mymave'
     {
 
        sh 'docker login -u $USER -p $PASS'
-       sh 'docker tag myapp $USER/satya'
-       sh 'docker push $USER/satya'
+       sh 'docker tag img1:latest sunithriyansh/satya'
+       sh 'docker push sunithriyansh/satya'
      }
    }
 }
