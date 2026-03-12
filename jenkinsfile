@@ -33,7 +33,7 @@ pipeline {
 
         stage('Docker Run') {
             steps {
-                sh 'docker rm -f cont1 || true'
+                sh 'docker rm -f cont2 || true'
                 sh 'docker run -d --name cont1 -p 8090:8080 imag1'
             }
         }
