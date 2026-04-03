@@ -30,15 +30,16 @@
             <version>3.8.1</version>
             <scope>test</scope>
         </dependency>
-    </dependencies>
+    </dependencies> 
          <distributionManagement>
     <repository>
         <id>nexus-releases</id>
-        <url>http://<43.205.232.220>:8081/repository/maven-releases/</url>
+        <url>http://52.66.224.134:8081/repository/maven-releases/</url>
     </repository>
+
     <snapshotRepository>
         <id>nexus-snapshots</id>
-        <url>http://<43.205.232.220>:8081/repository/maven-snapshots/</url>
+        <url>http://52.66.224.134:8081/repository/maven-snapshots/</url>
     </snapshotRepository>
 </distributionManagement>
 
