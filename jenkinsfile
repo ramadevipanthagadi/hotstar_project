@@ -2,17 +2,14 @@ pipeline {
     agent any
 
     tools {
-        maven 'maven3'
+        maven 'maven3' // exact Maven tool name from Global Tool Configuration
     }
 
     environment {
-        DOCKER_USER = 'sunithriyansh'
-        DOCKER_PASS = 'Sunitha@565'
-        IMAGE_NAME  = 'satya'
+        IMAGE_NAME = 'task4' // only literals allowed here
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 git branch: 'master', url: 'https://github.com/ramadevipanthagadi/hotstar_project.git'
@@ -33,18 +30,34 @@ pipeline {
 
         stage('Docker Run') {
             steps {
-                sh 'docker rm -f cont1 || true'
-                sh 'docker run -d --name cont1 -p 8076:80 myimg2'
+                sh 'docker rm -f cont1 || echo "container not found"'
+                sh 'docker run -d --name cont1 -p 8076:8080 myimg2'
             }
         }
 
         stage('Push to DockerHub') {
             steps {
-                sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
-                sh 'docker tag imag1:latest $DOCKER_USER/$IMAGE_NAME:latest'
-                sh 'docker push $DOCKER_USER/$IMAGE_NAME:latest'
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-cred-id', 
+                                                 usernameVariable: 'DOCKER_USER', 
+                                                 passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    sh 'docker tag myimg2:latest $DOCKER_USER/$IMAGE_NAME:latest'
+                    sh 'docker push $DOCKER_USER/$IMAGE_NAME:latest'
+                }
             }
         }
 
-    }
-}
+        stage('Deploy to Nexus') {
+            steps {
+                withMaven(
+                    globalMavenSettingsConfig: 'settings.xml', // Jenkins-managed Maven settings
+                    jdk: 'jdk17',
+                    maven: 'my maven',
+                    traceability: true
+                ) {
+                    sh 'mvn deploy'
+                }
+            }
+        }
+    } // end of stages
+} // end of pipeline
