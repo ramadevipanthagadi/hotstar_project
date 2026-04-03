@@ -2,14 +2,15 @@ pipeline {
     agent any
 
     tools {
-        maven 'maven3' // exact Maven tool name from Global Tool Configuration
+        maven 'maven3'
     }
 
     environment {
-        IMAGE_NAME = 'task4' // only literals allowed here
+        IMAGE_NAME = 'task4'
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 git branch: 'master', url: 'https://github.com/ramadevipanthagadi/hotstar_project.git'
@@ -37,12 +38,32 @@ pipeline {
 
         stage('Push to DockerHub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-cred-id', 
-                                                 usernameVariable: 'DOCKER_USER', 
-                                                 passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                    sh 'docker tag myimg2:latest $DOCKER_USER/$IMAGE_NAME:latest'
-                    sh 'docker push $DOCKER_USER/$IMAGE_NAME:latest'
+                withCredentials([usernamePassword(
+                    credentialsId: 'docker-hub-cred-id',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        docker tag myimg2:latest $DOCKER_USER/$IMAGE_NAME:latest
+                        docker push $DOCKER_USER/$IMAGE_NAME:latest
+                    '''
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonar-server') {   // replace with your actual SonarQube name
+                    sh 'mvn sonar:sonar'
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 2, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
                 }
             }
         }
@@ -50,14 +71,14 @@ pipeline {
         stage('Deploy to Nexus') {
             steps {
                 withMaven(
-                    globalMavenSettingsConfig: 'settings.xml', // Jenkins-managed Maven settings
+                    globalMavenSettingsConfig: 'settings.xml',
                     jdk: 'jdk17',
-                    maven: 'my maven',
+                    maven: 'maven3',
                     traceability: true
                 ) {
                     sh 'mvn deploy'
                 }
             }
         }
-    } // end of stages
-} // end of pipeline
+    }
+}
