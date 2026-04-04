@@ -1,107 +1,74 @@
 pipeline {
-agent any
+    agent any
 
-```
-tools {
-    maven 'maven3'
-}
-
-environment {
-    IMAGE_NAME = "sunithriyansh/task4"
-    DOCKER_CRED = "docker-cred"
-    SONARQUBE_ENV = "sonar-server"
-    NEXUS_URL = "http://<your-nexus-ip>:8081"
-    NEXUS_REPO = "maven-releases"
-    NEXUS_CRED = "nexus-cred"
-}
-
-stages {
-
-    stage('Checkout') {
-        steps {
-            git branch: 'master',
-            url: 'https://github.com/ramadevipanthagadi/hotstar_project.git'
-        }
+    tools {
+        maven 'maven3'
     }
 
-    stage('Build') {
-        steps {
-            sh 'mvn clean package'
-        }
+    environment {
+        IMAGE_NAME = 'task4'
+        DOCKERHUB_CREDENTIALS = 'dockerhub-creds'
     }
 
-    stage('SonarQube Analysis') {
-        steps {
-            withSonarQubeEnv("$SONARQUBE_ENV") {
-                sh 'mvn sonar:sonar'
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git branch: 'master', url: 'https://github.com/ramadevipanthagadi/hotstar_project.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonar-server') {
+                    sh 'mvn sonar:sonar'
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t $IMAGE_NAME .'
+            }
+        }
+
+        stage('Docker Login & Push') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'USER',
+                    passwordVariable: 'PASS'
+                )]) {
+                    sh '''
+                        docker login -u $USER -p $PASS
+                        docker tag $IMAGE_NAME $USER/$IMAGE_NAME
+                        docker push $USER/$IMAGE_NAME
+                    '''
+                }
             }
         }
     }
 
-    stage('Quality Gate') {
-        steps {
-            waitForQualityGate abortPipeline: true
+    post {
+        success {
+            echo 'Pipeline executed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Check logs.'
         }
     }
-
-    stage('Docker Build') {
-        steps {
-            sh 'docker build -t $IMAGE_NAME .'
-        }
-    }
-
-    stage('Docker Login') {
-        steps {
-            withCredentials([usernamePassword(
-                credentialsId: "$DOCKER_CRED",
-                usernameVariable: 'USER',
-                passwordVariable: 'PASS'
-            )]) {
-                sh 'echo $PASS | docker login -u $USER --password-stdin'
-            }
-        }
-    }
-
-    stage('Push to DockerHub') {
-        steps {
-            sh 'docker push $IMAGE_NAME'
-        }
-    }
-
-    stage('Deploy WAR to Nexus') {
-        steps {
-            withCredentials([usernamePassword(
-                credentialsId: "$NEXUS_CRED",
-                usernameVariable: 'NEXUS_USER',
-                passwordVariable: 'NEXUS_PASS'
-            )]) {
-                sh '''
-                curl -v -u $NEXUS_USER:$NEXUS_PASS \
-                --upload-file target/*.war \
-                $NEXUS_URL/repository/$NEXUS_REPO/myapp.war
-                '''
-            }
-        }
-    }
-
-    stage('Deploy to Kubernetes') {
-        steps {
-            sh '''
-            kubectl apply -f k8s/deployment.yaml
-            kubectl apply -f k8s/service.yaml
-            '''
-        }
-    }
-}
-
-post {
-    success {
-        echo "🎉 Pipeline executed successfully!"
-    }
-    failure {
-        echo "❌ Pipeline failed!"
-    }
-}
-```
-
 }
