@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        maven 'maven3'
+        maven 'mymaven'
     }
 
     environment {
@@ -22,18 +22,18 @@ pipeline {
             steps {
                 sh 'mvn clean package'
             }
-       }
-       stage('artifact') {
+        }
+
+        stage('artifact') {
             steps {
-                configFileProvider([configFile('settings.xml')]) {
-        //some block
-      }
-      sh 'mvn deploy'
+                configFileProvider([configFile(fileId: 'settings.xml', variable: 'MAVEN_SETTINGS')]) {
+                    sh 'mvn deploy --settings $MAVEN_SETTINGS'
+                }
             }
         }
 
-
-       /* stage('SonarQube Analysis') {
+        /*
+        stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sonar-server') {
                     sh 'mvn sonar:sonar'
@@ -70,8 +70,10 @@ pipeline {
                 }
             }
         }
-    }
-*/
+        */
+
+    } // ✅ stages properly closed here
+
     post {
         success {
             echo 'Pipeline executed successfully!'
