@@ -6,10 +6,10 @@ pipeline {
         jdk 'jdk17'
     }
 
-    environment {
+   /* environment {
         IMAGE_NAME = 'task4'
         DOCKERHUB_CREDENTIALS = 'dockerhub-creds'
-    }
+    }*/
 
     stages {
 
