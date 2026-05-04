@@ -23,6 +23,15 @@ pipeline {
                 sh 'mvn clean package'
             }
         }
+       stage('artifact') {
+            steps {
+                configFileProvider([configFile('settings.xml')]) {
+       // some block
+      }
+      sh 'mvn deploy'
+            }
+        }
+
 
         stage('SonarQube Analysis') {
             steps {
